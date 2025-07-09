@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Bot Chatbot</title>
+    <link rel="stylesheet" href="fonts.css">
+    <link rel="stylesheet" href="main.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div id="demo-container">
+        <h1 id="demo-title">DEMO WEBSITE; PRESS CHAT BUTTON TO OPEN CHATBOT</h1>
+    </div>
+    <button id="chat-fab" title="Open Chat">
+        <!-- Chat Icon -->
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="12" fill="#5f5fff"/>
+            <path d="M7 10h10M7 14h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </button>
+    <div id="chat-container" style="display:none;">
+        <div id="chat-header">
+            <button id="close-chat" title="Close Chat">&times;</button>
+            <button id="maximize-chat" title="Maximize Chat" style="display:none;">⬆️</button>
+            <div id="resize-handle"></div>
+        </div>
+        <div id="exit-confirm-modal" style="display:none;">
+            <div class="modal-content">
+                <p>Are you sure you want to exit the chat?</p>
+                <button id="exit-confirm-yes">Yes, exit</button>
+                <button id="exit-confirm-cancel">Cancel</button>
+            </div>
+        </div>
+        <!-- Save session -->
+        <div id="save-session-modal" style="display:none;">
+            <div class="modal-content">
+                <p>Before you go, would you like to save this conversation so we can continue where we left off next time?</p>
+                <button id="save-session-yes">Yes, save my session</button>
+                <button id="save-session-no">No, start fresh next time</button>
+            </div>
+        </div>
+        <div id="chat-dialogue-options" style="display:none; margin-bottom: 18px;">
+            <div class="dialogue-slider-group">
+                <span class="mood-icon" title="Calm">
+                    <!-- Calm SVG icon -->
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#5f5fff" stroke-width="2"/><path d="M8 15c1.5 1 6.5 1 8 0" stroke="#5f5fff" stroke-width="2" stroke-linecap="round"/></svg>
+                </span>
+                <label for="slider-calm">How calm do you feel?</label>
+                <input type="range" min="1" max="5" value="3" class="dialogue-slider" id="slider-calm" step="1">
+            </div>
+            <div class="dialogue-slider-group">
+                <span class="mood-icon" title="Confidence">
+                    <!-- Confidence SVG icon -->
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#5f5fff" stroke-width="2"/><path d="M12 8v4l3 3" stroke="#5f5fff" stroke-width="2" stroke-linecap="round"/></svg>
+                </span>
+                <label for="slider-confidence">How confident are you in your trading today?</label>
+                <input type="range" min="1" max="5" value="3" class="dialogue-slider" id="slider-confidence" step="1">
+            </div>
+            <div class="dialogue-slider-group">
+                <span class="mood-icon" title="Impulsive">
+                    <!-- Impulsive SVG icon -->
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#5f5fff" stroke-width="2"/><path d="M12 16c2-2 2-6 0-8" stroke="#5f5fff" stroke-width="2" stroke-linecap="round"/></svg>
+                </span>
+                <label for="slider-impulsive">Have you felt impulsive lately?</label>
+                <input type="range" min="1" max="5" value="3" class="dialogue-slider" id="slider-impulsive" step="1">
+            </div>
+            <button id="submit-dialogue-options" class="dialogue-submit-btn">Submit</button>
+        </div>
+        <div id="chat-window"></div>
+        <form id="chat-form">
+            <textarea id="user-input" placeholder="Type your message..." autocomplete="off" required></textarea>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html> 
