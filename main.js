@@ -122,12 +122,6 @@ $(function() {
         }
     });
 
-    // Snap sliders to nearest tick only on mouseup/touchend (not on every change)
-    $('.dialogue-slider').off('change mouseup touchend');
-    $('.dialogue-slider').on('mouseup touchend', function() {
-        var val = Math.round($(this).val());
-        $(this).val(val);
-    });
 
     // Chat form logic (existing)
     $('#chat-form').on('submit', function(e) {
