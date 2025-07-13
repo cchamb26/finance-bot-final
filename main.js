@@ -1,136 +1,128 @@
 $(function() {
-    // Initial state: only demo content and chat-fab visible
-    $('#chat-container').hide();
-    $('#chat-fab').show();
-
-    // On chat open, show only the mood sliders first
-    $('#chat-fab').on('click', function() {
-        $('#chat-container').fadeIn(200);
-        $('#chat-fab').hide();
-        $('#chat-dialogue-options').show();
-        $('#chat-window').hide();
-        $('#chat-form').hide();
-        showMaximizeIfMobile();
+    // Initialize the interface
+    initializeChatbot();
+    
+    // Handle mood assessment submission
+    $('#start-chat').on('click', function() {
+        startChat();
     });
-    // When mood is submitted, show chat window and form
-    $('#submit-dialogue-options').on('click', function() {
-        $('#chat-dialogue-options').fadeOut(200, function() {
-            $('#chat-window').fadeIn(200);
-            $('#chat-form').fadeIn(200);
-        });
+    
+    // Handle chat form submission
+    $('#chat-form').on('submit', function(e) {
+        e.preventDefault();
+        sendMessage();
     });
-
-    // Hide dialogue options on submit
-    $('#submit-dialogue-options').on('click', function() {
-        $('#chat-dialogue-options').fadeOut(200);
+    
+    // Handle clear chat
+    $('#clear-chat').on('click', function() {
+        clearChat();
     });
-
-    // Hide chat container when close button is pressed, with in-chat modal
-    $('#close-chat').on('click', function() {
-        $('#exit-confirm-modal').fadeIn(150);
+    
+    // Handle export chat
+    $('#export-chat').on('click', function() {
+        exportChat();
     });
+    
+    // Handle modals
     $('#exit-confirm-yes').on('click', function() {
         $('#exit-confirm-modal').hide();
         $('#save-session-modal').fadeIn(150);
     });
+    
     $('#exit-confirm-cancel').on('click', function() {
         $('#exit-confirm-modal').fadeOut(150);
     });
-
-    // Save session modal logic
+    
     $('#save-session-yes').on('click', function() {
-        // Save chat messages and slider values to localStorage
-        var messages = [];
-        document.querySelectorAll('.user-msg, .financebot-msg').forEach(function(msg) {
-            messages.push({
-                class: msg.className,
-                html: msg.innerHTML
+        saveSession();
+    });
+    
+    $('#save-session-no').on('click', function() {
+        clearSession();
+    });
+    
+    // Make textarea auto-resize up to 120px as user types
+    $('#user-input').on('input', function() {
+        this.style.height = '40px'; // reset to base height
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+    
+    // Handle Enter key
+    $('#user-input').on('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            $('#chat-form').submit();
+        }
+    });
+    
+    
+    function initializeChatbot() {
+        // Check for saved session
+        const savedSession = localStorage.getItem('volatility_vault_chat_session');
+        const savedMood = localStorage.getItem('volatility_vault_mood_assessment');
+        
+        if (savedSession && savedMood) {
+            // Restore saved session
+            const messages = JSON.parse(savedSession);
+            const moodData = JSON.parse(savedMood);
+            
+            // Restore mood sliders
+            $('#slider-calm').val(moodData.calm || 3);
+            $('#slider-confidence').val(moodData.confidence || 3);
+            $('#slider-impulsive').val(moodData.impulsive || 3);
+            
+            // Start chat directly
+            startChat();
+            
+            // Restore messages
+            messages.forEach(msg => {
+                appendMessage(msg.type, msg.content);
             });
+        } else {
+            // Reset sliders to default
+            $('#slider-calm').val(3);
+            $('#slider-confidence').val(3);
+            $('#slider-impulsive').val(3);
+        }
+    }
+    
+    function startChat() {
+        // Hide mood assessment
+        $('#mood-assessment').fadeOut(300, function() {
+            // Show chat interface
+            $('#chat-window').fadeIn(300);
+            $('#chat-input-container').fadeIn(300);
+            // Bot intro message
+            setTimeout(function() {
+                appendMessage('bot', "Hi! I'm your personal trading assistant. How can I help you today?");
+            }, 300);
         });
-        var dialogueValues = {
+    }
+    
+    function sendMessage() {
+        const userInput = $('#user-input').val().trim();
+        if (!userInput) return;
+        
+        // Add user message
+        appendMessage('user', userInput);
+        
+        // Clear input
+        $('#user-input').val('').css('height', 'auto');
+        
+        // Disable input while bot is typing
+        $('#user-input').prop('disabled', true);
+        $('#send-btn').prop('disabled', true);
+        
+        // Get mood data
+        const moodData = {
             calm: $('#slider-calm').val(),
             confidence: $('#slider-confidence').val(),
             impulsive: $('#slider-impulsive').val()
         };
-        localStorage.setItem('financebot_chat_session', JSON.stringify(messages));
-        localStorage.setItem('financebot_dialogue_options', JSON.stringify(dialogueValues));
-        $('#save-session-modal').hide();
-        $('#chat-container').fadeOut(200, function() {
-            $('#chat-fab').show();
-            location.reload();
-        });
-    });
-    $('#save-session-no').on('click', function() {
-        // Clear session data and reset sliders
-        localStorage.removeItem('financebot_chat_session');
-        localStorage.removeItem('financebot_dialogue_options');
-        $('#save-session-modal').hide();
-        $('#chat-container').fadeOut(200, function() {
-            $('#chat-fab').show();
-            location.reload();
-        });
-    });
-
-    // (Optional) On page load, restore session if exists
-    var saved = localStorage.getItem('financebot_chat_session');
-    var dialogueSaved = localStorage.getItem('financebot_dialogue_options');
-    if (saved) {
-        var messages = JSON.parse(saved);
-        var chatWindow = document.getElementById('chat-window');
-        messages.forEach(function(msg) {
-            var div = document.createElement('div');
-            div.className = msg.class;
-            div.innerHTML = msg.html;
-            chatWindow.appendChild(div);
-        });
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-        // Restore dialogue slider values
-        if (dialogueSaved) {
-            var dialogueValues = JSON.parse(dialogueSaved);
-            $('#slider-calm').val(dialogueValues.calm || 3);
-            $('#slider-confidence').val(dialogueValues.confidence || 3);
-            $('#slider-impulsive').val(dialogueValues.impulsive || 3);
-        }
-    } else {
-        // Reset sliders to default
-        $('#slider-calm').val(3);
-        $('#slider-confidence').val(3);
-        $('#slider-impulsive').val(3);
-    }
-
-    // Show/hide maximize button on resize
-    $(window).on('resize', showMaximizeIfMobile);
-    function showMaximizeIfMobile() {
-        if (window.innerWidth <= 600) {
-            $('#maximize-chat').show();
-        } else {
-            $('#maximize-chat').hide();
-            $('#chat-container').removeClass('maximized-mobile');
-            $('#maximize-chat').text('⬆️');
-        }
-    }
-
-    // Maximize/restore logic
-    $('#maximize-chat').on('click', function() {
-        var $chat = $('#chat-container');
-        if ($chat.hasClass('maximized-mobile')) {
-            $chat.removeClass('maximized-mobile');
-            $('#maximize-chat').text('⬆️');
-        } else {
-            $chat.addClass('maximized-mobile');
-            $('#maximize-chat').text('⬇️');
-        }
-    });
-
-
-    // Chat form logic (existing)
-    $('#chat-form').on('submit', function(e) {
-        e.preventDefault();
-        var userInput = $('#user-input').val();
-        if (!userInput.trim()) return;
-        $('#chat-window').append('<div class="user-msg">' + $('<div>').text(userInput).html() + '</div>');
-        $('#user-input').val('');
-        $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
+        
+        // Show typing indicator
+        showTypingIndicator();
+        
         // Send to backend
         $.ajax({
             url: 'https://YOUR-BACKEND-URL/api/chat', // Update this to your deployed backend URL
@@ -138,82 +130,147 @@ $(function() {
             contentType: 'application/json',
             data: JSON.stringify({ 
                 message: userInput, 
-                personality: {
-                    calm: $('#slider-calm').val(),
-                    confidence: $('#slider-confidence').val(),
-                    impulsive: $('#slider-impulsive').val()
-                }
+                personality: moodData
             }),
-            success: function(res) {
-                $('#chat-window').append('<div class="financebot-msg">FinanceBot: ' + $('<div>').text(res.reply).html() + '</div>');
-                $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
+            success: function(response) {
+                hideTypingIndicator();
+                appendMessage('bot', response.reply || 'I understand your question. Let me help you with that.');
+                // Re-enable input
+                $('#user-input').prop('disabled', false);
+                $('#send-btn').prop('disabled', false);
+                $('#user-input').focus();
             },
             error: function() {
-                $('#chat-window').append('<div class="financebot-msg error">FinanceBot: Sorry, there was an error.</div>');
-                $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
+                hideTypingIndicator();
+                appendMessage('bot', 'I apologize, but I\'m experiencing some technical difficulties. Please try again in a moment.');
+                // Re-enable input
+                $('#user-input').prop('disabled', false);
+                $('#send-btn').prop('disabled', false);
+                $('#user-input').focus();
             }
         });
-    });
-
-    // Make chat textarea grow vertically as user types
-    $('#user-input').on('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight) + 'px';
-    });
-    // Reset textarea height after sending a message
-    $('#chat-form').on('submit', function() {
-        $('#user-input').css('height', 'auto');
-    });
-
-    // Allow Enter to send, Shift+Enter for newline
-    $('#user-input').on('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            $('#chat-form').submit();
+    }
+    
+    function appendMessage(type, content) {
+        let messageDiv;
+        if (type === 'user') {
+            messageDiv = $('<div>').addClass('user-msg');
+            messageDiv.html($('<div>').text(content).html());
+        } else {
+            messageDiv = $('<div>').addClass('bot-msg');
+            messageDiv.html('<span class="bot-name">Volatility Vault AI</span>' + $('<div>').text(content).html());
         }
-    });
 
-    //Resize chat window from top left, anchor point on bottom right
-    let isResizing = false;
-    let startX, startY, startWidth, startHeight;
-    const $chat = $('#chat-container');
-    const minWidth = 260, minHeight = 320;
+        $('#chat-messages').append(messageDiv);
+        scrollToBottom();
 
-    $('#resize-handle').on('mousedown', function(e) {
-        if (window.innerWidth <= 600) return; // Disable on mobile
-        e.preventDefault();
-        isResizing = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        startWidth = $chat.width();
-        startHeight = $chat.height();
-        $chat.css('transition', 'none');
-        $(document).on('mousemove.resizeChat', resizeChat);
-        $(document).on('mouseup.resizeChat', stopResizeChat);
-    });
-
-    function resizeChat(e) {
-        if (!isResizing) return;
-        const winW = $(window).width();
-        const winH = $(window).height();
-        let dx = e.clientX - startX;
-        let dy = e.clientY - startY;
-        // Only adjust width/height, keep bottom right fixed
-        let newWidth = Math.max(minWidth, Math.min(winW - 40, startWidth - dx)); // 40px right margin
-        let newHeight = Math.max(minHeight, Math.min(winH - 100, startHeight - dy)); // 100px bottom margin
-        $chat.css({
-            width: newWidth + 'px',
-            height: newHeight + 'px'
-            // right and bottom remain fixed
+        // Save to session
+        saveMessageToSession(type, content);
+    }
+    
+    function showTypingIndicator() {
+        const typingDiv = $('<div>').addClass('bot-msg typing-indicator');
+        typingDiv.html('<div>Volatility Vault AI is typing...</div>');
+        $('#chat-messages').append(typingDiv);
+        scrollToBottom();
+    }
+    
+    function hideTypingIndicator() {
+        $('.typing-indicator').remove();
+    }
+    
+    function scrollToBottom() {
+        const chatMessages = $('#chat-messages')[0];
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function clearChat() {
+        if (confirm('Are you sure you want to clear the chat history?')) {
+            $('#chat-messages').empty();
+            localStorage.removeItem('volatility_vault_chat_session');
+        }
+    }
+    
+    function exportChat() {
+        const messages = [];
+        $('#chat-messages .user-msg, #chat-messages .bot-msg').each(function() {
+            const isUser = $(this).hasClass('user-msg');
+            const content = $(this).text();
+            messages.push({
+                type: isUser ? 'User' : 'Volatility Vault AI',
+                content: content,
+                timestamp: new Date().toISOString()
+            });
         });
+        
+        const chatData = {
+            title: 'Volatility Vault AI Chat Export',
+            date: new Date().toISOString(),
+            messages: messages
+        };
+        
+        const dataStr = JSON.stringify(chatData, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `volatility-vault-chat-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
     }
-
-    function stopResizeChat() {
-        isResizing = false;
-        $chat.css('transition', 'box-shadow 0.3s, transform 0.3s');
-        $(document).off('.resizeChat');
+    
+    function saveMessageToSession(type, content) {
+        const savedSession = localStorage.getItem('volatility_vault_chat_session');
+        const messages = savedSession ? JSON.parse(savedSession) : [];
+        
+        messages.push({
+            type: type,
+            content: content,
+            timestamp: new Date().toISOString()
+        });
+        
+        localStorage.setItem('volatility_vault_chat_session', JSON.stringify(messages));
     }
-
-    // Initial maximize button state
-    showMaximizeIfMobile();
+    
+    function saveSession() {
+        const moodData = {
+            calm: $('#slider-calm').val(),
+            confidence: $('#slider-confidence').val(),
+            impulsive: $('#slider-impulsive').val()
+        };
+        
+        localStorage.setItem('volatility_vault_mood_assessment', JSON.stringify(moodData));
+        $('#save-session-modal').hide();
+        
+        // Show confirmation
+        appendMessage('bot', 'Your session has been saved. You can continue where you left off next time.');
+    }
+    
+    function clearSession() {
+        localStorage.removeItem('volatility_vault_chat_session');
+        localStorage.removeItem('volatility_vault_mood_assessment');
+        $('#save-session-modal').hide();
+        
+        // Show confirmation
+        appendMessage('bot', 'Session cleared. Starting fresh next time.');
+    }
+    
+    // Add some CSS for typing indicator
+    $('<style>')
+        .prop('type', 'text/css')
+        .html(`
+            .typing-indicator {
+                opacity: 0.7;
+                font-style: italic;
+            }
+            .typing-indicator::before {
+                content: "Volatility Vault AI";
+                position: absolute;
+                top: -24px;
+                left: 0;
+                color: #1E90FF;
+                font-size: 14px;
+                font-weight: 600;
+            }
+        `)
+        .appendTo('head');
 }); 
