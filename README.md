@@ -7,7 +7,6 @@ It includes a Node.js backend (Express + Azure OpenAI) and a modern HTML/CSS/JS 
 
 ## Features
 - Mood-based system prompt using user sliders (calm, confidence, impulsivity)
-- Responsive chat UI styled for dark mode with fintech aesthetics
 - Chat history export, session persistence (via localStorage), and modals for UX polish
 - Azure OpenAI GPT-4o backend integration with prompt engineering
 
