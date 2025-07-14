@@ -105,7 +105,7 @@ $(function() {
         
         // Send to backend
         $.ajax({
-            url: 'http://localhost:3001/api/chat', // Update this to your deployed backend URL
+            url: `${window.origin}/api/chat`,
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({ 
